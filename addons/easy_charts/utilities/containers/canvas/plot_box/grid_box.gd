@@ -23,6 +23,10 @@ func set_labels(x_labels: Array, y_labels: Array) -> void:
 	self.y_labels = y_labels
 
 func _draw() -> void:
+	if get_parent().chart_properties == null:
+		printerr("Cannot draw GridBox without ChartProperties!")
+		return
+	
 	self.box = get_parent().get_box()
 	self.plot_box = get_parent().get_plot_box()
 	
@@ -43,7 +47,9 @@ func _draw_background() -> void:
 	draw_rect(self.box, get_parent().chart_properties.colors.background, true)# false) TODOGODOT4 Antialiasing argument is missing
 
 func _draw_bounding_box() -> void:
-	draw_rect(self.box, get_parent().chart_properties.colors.bounding_box, false, 1)# true) TODOGODOT4 Antialiasing argument is missing
+	var box: Rect2 = self.box
+	box.position.y += 1
+	draw_rect(box, get_parent().chart_properties.colors.bounding_box, false, 1)# true) TODOGODOT4 Antialiasing argument is missing
 
 func _draw_origin() -> void:
 	var xorigin: float = ECUtilities._map_domain(0.0, x_domain, { lb = self.plot_box.position.x, ub = self.plot_box.end.x })

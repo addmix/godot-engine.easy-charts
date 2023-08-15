@@ -4,7 +4,7 @@ class_name ScatterPlotter
 signal point_entered(point, function)
 signal point_exited(point, function)
 
-var points: Array
+var points: Array[Point]
 var points_positions: PackedVector2Array
 var focused_point: Point
 
@@ -15,24 +15,26 @@ func _init(function: Function) -> void:
 	self.point_size = function.props.get("point_size", 3.0)
 
 func _draw() -> void:
+	super._draw()
+
 	var box: Rect2 = get_box()
 	var x_sampled_domain: Dictionary = { lb = box.position.x, ub = box.end.x }
 	var y_sampled_domain: Dictionary = { lb = box.end.y, ub = box.position.y }
 	sample(x_sampled_domain, y_sampled_domain)
-	
+
 	if function.get_marker() != Function.Marker.NONE:
 		for point in points:
-			draw_function_point(point.position)
+			# Don't plot points outside domain upper and lower bounds!
+			if point.position.y <= y_sampled_domain.lb and point.position.y >= y_sampled_domain.ub:
+				draw_function_point(point.position)
 
 func sample(x_sampled_domain: Dictionary, y_sampled_domain: Dictionary) -> void:
 	points = []
 	points_positions = []
-	
-	var lower_bound : int = max(0, function.__x.size() - get_chart_properties().max_samples)
+	var lower_bound: int = max(0, function.__x.size() - get_chart_properties().max_samples) \
 	#disable sample display limits
-	if get_chart_properties().max_samples == -1:
-		lower_bound = 0
-	
+		if get_chart_properties().max_samples > 0 \
+		else 0
 	for i in range(lower_bound, function.__x.size()):
 		var _position: Vector2 = Vector2(
 			ECUtilities._map_domain(float(function.__x[i]), x_domain, x_sampled_domain),
@@ -45,7 +47,7 @@ func draw_function_point(point_position: Vector2) -> void:
 	match function.get_marker():
 		Function.Marker.SQUARE:
 			draw_rect(
-				Rect2(point_position - (Vector2.ONE * point_size), (Vector2.ONE * point_size * 2)), 
+				Rect2(point_position - (Vector2.ONE * point_size), (Vector2.ONE * point_size * 2)),
 				function.get_color(), true, 1.0
 			)
 		Function.Marker.TRIANGLE:
